@@ -1,9 +1,11 @@
 package com.library.gotopage.base;
 
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.util.Log;
 
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -15,8 +17,12 @@ import java.util.Map;
  * 管理执行跳转过程中的运行时信息，包括但不限于前置条件的执行情况
  */
 
-
 public class BaseContext {
+    public static final int STATE_DEFAULT = -1;//未验证
+    public static final int STATE_SUCCESS = 0;//成功
+    public static final int STATE_FAIL = 1;//失败
+    public static final int STATE_PENDING = 2;//成功
+
     /**
      * 当前在执行的前置条件
      */
@@ -29,6 +35,10 @@ public class BaseContext {
      * 当前第几个执行failBefore生命周期短
      */
     private int failBeforeIndex = -1;
+    /**
+     * 当前第几个执行pendingBefore生命周期短
+     */
+    private int pendingBeforeIndex = -1;
 
     /**
      * 当前第几个执行successAfter生命周期短
@@ -38,27 +48,67 @@ public class BaseContext {
      * 当前第几个执行failAfter生命周期短
      */
     private int failAfterIndex = -1;
+    /**
+     * 当前第几个执行pendingAfter生命周期短
+     */
+    private int pendingAfterIndex = -1;
 
-    private Context context;
+    private Map<Integer, Integer> stateMap = new HashMap<>();
+
+    private Activity context;
     private BaseConfigVO baseConfigVO;
     private Map<String, String> params;//跳转需要的参数
     private int flags;
 
-
+    /**
+     * 记录SuccessAfter生命周期走的次数
+     */
     public void setSuccessAfterIndex() {
         this.successAfterIndex++;
     }
 
+    /**
+     * 记录SuccessBefore生命周期走的次数
+     */
     public void setSuccessBeforeIndex() {
         this.successBeforeIndex++;
     }
 
+    /**
+     * 记录PFailBefore生命周期走的次数
+     */
     public void setFailBeforeIndex() {
         this.failBeforeIndex++;
     }
 
+    /**
+     * 记录PFailAfter生命周期走的次数
+     */
     public void setFailAfterIndex() {
         this.failAfterIndex++;
+    }
+
+    /**
+     * 记录PendingBefore生命周期走的次数
+     */
+    public void setPendingBeforeIndex() {
+        this.pendingBeforeIndex++;
+    }
+
+    /**
+     * 记录PendingAfter生命周期走的次数
+     */
+    public void setPendingAfterIndex() {
+        this.pendingAfterIndex++;
+    }
+
+    /**
+     * 记录每一个条件验证的结果
+     *
+     * @param state
+     */
+    public void setStateSign(int state) {
+        stateMap.put(currentConditionIndex, state);
     }
 
     public int getSuccessBeforeIndex() {
@@ -77,11 +127,23 @@ public class BaseContext {
         return failAfterIndex;
     }
 
-    public Context getContext() {
+    public int getPendingBeforeIndex() {
+        return pendingBeforeIndex;
+    }
+
+    public int getPendingAfterIndex() {
+        return pendingAfterIndex;
+    }
+
+    public int getCurrentConditionIndex() {
+        return currentConditionIndex;
+    }
+
+    public Activity getContext() {
         return context;
     }
 
-    public void setContext(Context context) {
+    public void setContext(Activity context) {
         this.context = context;
     }
 
@@ -94,7 +156,7 @@ public class BaseContext {
     }
 
     public Map<String, String> getParams() {
-        return params;
+        return baseConfigVO.getParams();
     }
 
     public void setParams(Map<String, String> params) {
@@ -109,10 +171,9 @@ public class BaseContext {
         this.flags = flags;
     }
 
-    public BaseContext(Context context, BaseConfigVO baseConfigVO, int flags) {
+    public BaseContext(Activity context, BaseConfigVO baseConfigVO, int flags) {
         this.context = context;
         this.baseConfigVO = baseConfigVO;
-        this.params = baseConfigVO.getParams();
         this.flags = flags;
     }
 
@@ -150,6 +211,42 @@ public class BaseContext {
      */
     public boolean isFirstSuccessBeforeAuthCondition() {
         return 0 == getSuccessBeforeIndex();
+    }
+
+    /**
+     * 第一个走pendingBefore 生命周期的权限
+     *
+     * @return
+     */
+    public boolean isFirstPendingBeforeAuthCondition() {
+        return 0 == getPendingBeforeIndex();
+    }
+
+    /**
+     * 第一个走FailAfter 生命周期的权限
+     *
+     * @return
+     */
+    public boolean isFirstFailAfterAuthCondition() {
+        return 0 == getFailAfterIndex();
+    }
+
+    /**
+     * 第一个走SuccessAfter 生命周期的权限
+     *
+     * @return
+     */
+    public boolean isFirstSuccessAfterAuthCondition() {
+        return 0 == getSuccessAfterIndex();
+    }
+
+    /**
+     * 第一个走pendingAfter 生命周期的权限
+     *
+     * @return
+     */
+    public boolean isFirstPendingAfterAuthCondition() {
+        return 0 == getPendingAfterIndex();
     }
 
 
@@ -199,8 +296,85 @@ public class BaseContext {
                 currentConditionIndex != (getAuthConditionSize() - 1);
     }
 
+    /**
+     * 获取当前在执行的权限
+     *
+     * @return
+     */
     public BasePreAuthCondition getCurrentCondition() {
         return this.getAuthConditionByIndex(currentConditionIndex);
+    }
+
+    /**
+     * 获取指定下标验证条件的状态
+     *
+     * @param index
+     * @return
+     */
+    public int getStateAuthByIndex(int index) {
+        if (stateMap.containsKey(index)) {
+            return stateMap.get(index);
+        }
+        return STATE_DEFAULT;
+    }
+
+    /**
+     * 获取某个验证条件的验证状态
+     *
+     * @param condition
+     * @return
+     */
+    public int getStateAuth(BasePreAuthCondition condition) {
+        int key = getAuthConditionIndex(condition);
+        if(stateMap.containsKey(key)){
+            return  stateMap.get(key);
+        }
+        return STATE_DEFAULT;
+    }
+
+    /**
+     * 获取验证成功的个数
+     *
+     * @return
+     */
+    public int getCountStateAuthSuccess() {
+        int number = 0;
+        for (Integer key : stateMap.keySet()) {
+            if (STATE_SUCCESS == stateMap.get(key)) {
+                number++;
+            }
+        }
+        return number;
+    }
+
+    /**
+     * 获取验证失败的个数
+     *
+     * @return
+     */
+    public int getCountStateAuthFail() {
+        int number = 0;
+        for (Integer key : stateMap.keySet()) {
+            if (STATE_FAIL == stateMap.get(key)) {
+                number++;
+            }
+        }
+        return number;
+    }
+
+    /**
+     * 获取验证进行中的个数
+     *
+     * @return
+     */
+    public int getCountStateAuthPending() {
+        int number = 0;
+        for (Integer key : stateMap.keySet()) {
+            if (STATE_PENDING == stateMap.get(key)) {
+                number++;
+            }
+        }
+        return number;
     }
 
     /**
@@ -236,7 +410,7 @@ public class BaseContext {
      *
      * @return
      */
-    private Intent getIntent() {
+    protected Intent getIntent() {
         Class activityClass = null;
         try {
             activityClass = Class.forName(baseConfigVO.getActivityName());
@@ -245,9 +419,9 @@ public class BaseContext {
             return null;
         }
         Intent intent = new Intent();
-        if (params != null && !params.isEmpty()) {
-            for (String key : params.keySet()) {
-                intent.putExtra(key, params.get(key));
+        if (getParams() != null && !getParams().isEmpty()) {
+            for (String key : getParams().keySet()) {
+                intent.putExtra(key, getParams().get(key));
             }
         }
         intent.setClass(context, activityClass);

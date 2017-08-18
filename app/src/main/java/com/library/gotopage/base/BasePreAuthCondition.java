@@ -1,18 +1,22 @@
 package com.library.gotopage.base;
 
+import com.library.gotopage.data.StateInterface;
+
 /**
  * Author:jmtian
  * Date: 2017/8/14 17:15
  * Commemt:
  * 封装前置条件默认实现，子类实现对应的生命周期函数
- * 控制条件类封装了
- * 1. 验证前该做什么
- * 2. 如何验证状态
- * 3. 验证完成后该做什么
+ * 控制条件类封装包括：
+ * 验证前判断
+ * 验证状态
+ * 验证后实现
  */
 
-public class BasePreAuthCondition {
+public class BasePreAuthCondition implements StateInterface {
+
     protected BaseContext baseContext;
+    private boolean isStart = false;//是否是start方法
 
     public BasePreAuthCondition(BaseContext baseContext) {
         this.baseContext = baseContext;
@@ -25,20 +29,8 @@ public class BasePreAuthCondition {
      */
 
     public void start() {
-        int state = getState();
-        switch (state) {
-            case 0:
-                baseContext.setSuccessBeforeIndex();
-                successBefore();
-                break;
-            case 1:
-                baseContext.setFailBeforeIndex();
-                failBefore();
-                break;
-            case 2:
-                pendingBefore();
-                break;
-        }
+        isStart = true;
+        getState(this);
     }
 
     /**
@@ -48,20 +40,8 @@ public class BasePreAuthCondition {
      */
 
     public void after() {
-        int state = getState();
-        switch (state) {
-            case 0:
-                baseContext.setSuccessAfterIndex();
-                successAfter();
-                break;
-            case 1:
-                baseContext.setFailAfterIndex();
-                failAfter();
-                break;
-            case 2:
-                pendingAfter();
-                break;
-        }
+        isStart = false;
+        getState(this);
     }
 
     /**
@@ -70,8 +50,8 @@ public class BasePreAuthCondition {
      * 1 失败
      * 2 pending
      */
-    public int getState() {
-        return 0;
+    public void getState(StateInterface stateInterface) {
+
     }
 
 
@@ -96,5 +76,39 @@ public class BasePreAuthCondition {
 
     public void failAfter() {
 
+    }
+
+    @Override
+    public void stateCallBack(int state) {
+        baseContext.setStateSign(state);
+        switch (state) {
+            case BaseContext.STATE_SUCCESS:
+                if (isStart) {
+                    baseContext.setSuccessBeforeIndex();
+                    successBefore();
+                } else {
+                    baseContext.setSuccessAfterIndex();
+                    successAfter();
+                }
+                break;
+            case BaseContext.STATE_FAIL:
+                if (isStart) {
+                    baseContext.setFailBeforeIndex();
+                    failBefore();
+                } else {
+                    baseContext.setFailAfterIndex();
+                    failAfter();
+                }
+                break;
+            case BaseContext.STATE_PENDING:
+                if (isStart) {
+                    baseContext.setPendingBeforeIndex();
+                    pendingBefore();
+                } else {
+                    baseContext.setPendingAfterIndex();
+                    pendingAfter();
+                }
+                break;
+        }
     }
 }

@@ -116,7 +116,7 @@ public class BaseConfigVO implements Serializable {
             } catch (IllegalAccessException e) {
                 e.printStackTrace();
             } catch (Exception e) {
-
+                e.printStackTrace();
             }
         }
         return null;

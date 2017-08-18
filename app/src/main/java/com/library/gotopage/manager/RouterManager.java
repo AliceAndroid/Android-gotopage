@@ -184,7 +184,7 @@ public class RouterManager {
         itemVO.setContextClass(jsonObject.getString("contextClass"));
         JSONObject contextParams = jsonObject.getJSONObject("contextParams");
         Map<String, String> conMap = itemVO.getContextParams();
-        if (null != params) {
+        if (null != contextParams) {
             conMap = Util.getMap(conMap, contextParams);
         }
         itemVO.setContextParams(conMap);

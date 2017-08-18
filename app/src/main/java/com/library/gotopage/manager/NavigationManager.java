@@ -25,6 +25,7 @@ import java.util.Map;
  */
 
 public class NavigationManager {
+    private static final String TAG = "NavigationManager";
 
     private Context fromContext;
     private BaseContext baseContext;
@@ -80,7 +81,7 @@ public class NavigationManager {
         gotoPage(params, fromContext, -1);
     }
 
-    public void gotoPage(String pageID, String params, Context fromContext, int flags) {
+    public void gotoPage(String pageID, String params, Activity fromContext, int flags) {
         this.fromContext = fromContext;
         JSONObject jsonObject = JSON.parseObject(params);
         BaseConfigVO config = RouterManager.getInstance().getNavigationItemByPageID(pageID, jsonObject);
@@ -93,13 +94,13 @@ public class NavigationManager {
 
 
     /**
-     * 通过NavigationItemVO处理导航
+     * 通过BaseConfigVO里面的contextClass 创建不同的baseContext
      *
      * @param fromActivity
      * @param config
      * @param flags
      */
-    public void navigateForAPP(Context fromActivity, BaseConfigVO config, int flags) {
+    public void navigateForAPP(Activity fromActivity, BaseConfigVO config, int flags) {
         // 根据config获取target
         if (!TextUtils.isEmpty(config.getContextClass())) {
             baseContext = getBaseContext(fromActivity, config, flags);
@@ -117,10 +118,10 @@ public class NavigationManager {
      * @param flags
      * @return
      */
-    private BaseContext getBaseContext(Context fromActivity, BaseConfigVO config, int flags) {
+    private BaseContext getBaseContext(Activity fromActivity, BaseConfigVO config, int flags) {
         try {
             Class<BaseContext> clazz = (Class<BaseContext>) Class.forName(config.getContextClass());
-            baseContext = clazz.getConstructor(Context.class, BaseConfigVO.class, Integer.class).newInstance(fromActivity, config, flags);
+            baseContext = clazz.getConstructor(Activity.class, BaseConfigVO.class, int.class).newInstance(fromActivity, config, flags);
         } catch (Exception e) {
             baseContext = new BaseContext(fromActivity, config, flags);
         }
