@@ -11,16 +11,19 @@ import java.util.Map;
  */
 
 
-public class AuthConfigVO implements Serializable{
-    private Map<String, String> params = new HashMap<>();//验证条件类配置信息 如绑卡成功后到目标页面还是回到原页面
-
-    private String authClazz;//验证类
-
-    private String authClazzName;//验证类类名
-
-    public String getAuthClazzName() {
-        return authClazz.substring(authClazz.lastIndexOf("\\."));
-    }
+public class AuthConfigVO implements Serializable {
+    /**
+     * 验证条件传入参数
+     */
+    private Map<String, String> params = new HashMap<>();
+    /**
+     * 验证条件配置项
+     */
+    private Map<String, String> options = new HashMap<>();
+    /**
+     * 验证类
+     */
+    private String authClazz;
 
     public Map<String, String> getParams() {
         return params;
@@ -36,5 +39,22 @@ public class AuthConfigVO implements Serializable{
 
     public void setAuthClazz(String authClazz) {
         this.authClazz = authClazz;
+    }
+
+    public Map<String, String> getOptions() {
+        return options;
+    }
+
+    public void setOptions(Map<String, String> options) {
+        this.options = options;
+    }
+
+    /**
+     * 获取验证类的类名
+     *
+     * @return
+     */
+    public String getAuthClazzName() {
+        return authClazz.substring(authClazz.lastIndexOf("\\."));
     }
 }

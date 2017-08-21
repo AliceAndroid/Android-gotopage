@@ -7,6 +7,8 @@ import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.library.gotopage.base.AuthConfigVO;
 import com.library.gotopage.base.BaseConfigVO;
+import com.library.gotopage.base.ContextConfigVO;
+import com.library.gotopage.base.ResultConfigVO;
 import com.library.gotopage.util.Util;
 
 import java.util.List;
@@ -54,7 +56,7 @@ public class RouterManager {
                 if (conditions != null && conditions.size() > 0) {
                     itemVO = getBaseConfigVOFromConditions(conditions, params);
                 } else {
-                    itemVO = getBaseConfigVOByJson(item.getJSONObject("result"));
+                    itemVO = getBaseConfigVOByJson(item);
                 }
                 break;
             }
@@ -63,8 +65,10 @@ public class RouterManager {
             itemVO = getNavigationItemByClassName(pageID);
         }
         if (null != itemVO && null != params) {
-            Map<String, String> map = itemVO.getParams();
-            itemVO.setParams(Util.getMap(map, params));
+            ResultConfigVO resultConfigVO = itemVO.getResult();
+            Map<String, String> map = resultConfigVO.getParams();
+            resultConfigVO.setParams(Util.getMap(map, params));
+            itemVO.setResult(resultConfigVO);
         }
         return itemVO;
     }
@@ -113,7 +117,10 @@ public class RouterManager {
         }
         if (null != activityClass) {
             itemVO = new BaseConfigVO();
-            itemVO.setActivityName(className);
+            ResultConfigVO configVO = itemVO.getResult();
+            configVO.setActivity(className);
+
+            itemVO.setResult(configVO);
         }
         return itemVO;
     }
@@ -143,7 +150,7 @@ public class RouterManager {
                 }
             }
             if (exist) {
-                itemVO = getBaseConfigVOByJson(condition.getJSONObject("result"));
+                itemVO = getBaseConfigVOByJson(condition);
                 break;
             }
         }
@@ -151,43 +158,66 @@ public class RouterManager {
     }
 
     /**
-     * 将result的jsonObject 转变为 NavigationItemVO
+     * 将result,context的jsonObject 转变为 BaseConfigVO
      *
      * @param jsonObject
      * @return
      */
     private BaseConfigVO getBaseConfigVOByJson(JSONObject jsonObject) {
         BaseConfigVO itemVO = new BaseConfigVO();
-        itemVO.setActivityName(jsonObject.getString("activity"));
+
+        JSONObject result = jsonObject.getJSONObject("result");
+        if (null != result) {
+            ResultConfigVO resultConfigVO = itemVO.getResult();
+            resultConfigVO.setActivity(result.getString("activity"));
+            JSONObject params = result.getJSONObject("params");
+            Map<String, String> map = resultConfigVO.getParams();
+            if (null != params) {
+                map = Util.getMap(map, params);
+            }
+            resultConfigVO.setParams(map);
+
+            itemVO.setResult(resultConfigVO);
+        }
+
         JSONArray authGroup = jsonObject.getJSONArray("authGroup");
-        List<AuthConfigVO> list = itemVO.getAuthGroup();
         if (null != authGroup) {
+            List<AuthConfigVO> list = itemVO.getAuthGroup();
             for (int i = 0; i < authGroup.size(); i++) {
                 JSONObject object = authGroup.getJSONObject(i);
                 AuthConfigVO vo = new AuthConfigVO();
                 vo.setAuthClazz(object.getString("authClazz"));
-                Map<String, String> map = vo.getParams();
+                Map<String, String> params = vo.getParams();
                 if (null != object.getJSONObject("params")) {
-                    map = Util.getMap(map, object.getJSONObject("params"));
+                    params = Util.getMap(params, object.getJSONObject("params"));
                 }
-                vo.setParams(map);
+                vo.setParams(params);
+                Map<String, String> options = vo.getOptions();
+                if (null != object.getJSONObject("options")) {
+                    options = Util.getMap(options, object.getJSONObject("options"));
+                }
+                vo.setOptions(options);
+
                 list.add(vo);
             }
+
             itemVO.setAuthGroup(list);
         }
-        JSONObject params = jsonObject.getJSONObject("params");
-        Map<String, String> map = itemVO.getParams();
-        if (null != params) {
-            map = Util.getMap(map, params);
+
+        JSONObject context = jsonObject.getJSONObject("context");
+        if (null != context) {
+            ContextConfigVO contextConfigVO = itemVO.getContext();
+            contextConfigVO.setClazz(context.getString("clazz"));
+            JSONObject contextParams = context.getJSONObject("options");
+            if (null != contextParams) {
+                Map<String, String> conMap = contextConfigVO.getOptions();
+                conMap = Util.getMap(conMap, contextParams);
+                contextConfigVO.setOptions(conMap);
+            }
+
+            itemVO.setContext(contextConfigVO);
         }
-        itemVO.setParams(map);
-        itemVO.setContextClass(jsonObject.getString("contextClass"));
-        JSONObject contextParams = jsonObject.getJSONObject("contextParams");
-        Map<String, String> conMap = itemVO.getContextParams();
-        if (null != contextParams) {
-            conMap = Util.getMap(conMap, contextParams);
-        }
-        itemVO.setContextParams(conMap);
+
         return itemVO;
     }
 }

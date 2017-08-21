@@ -14,43 +14,16 @@ import java.util.Map;
  */
 
 public class BaseConfigVO implements Serializable {
+    private ResultConfigVO result = new ResultConfigVO();//目标类
+    private List<AuthConfigVO> authGroup = new ArrayList<>();//权限组
+    private ContextConfigVO context = new ContextConfigVO();//baseContext 子类相关信息
 
-    /**
-     * activity Class
-     */
-    private String activityName;
-    /**
-     * 将要传入activity的参数
-     */
-    private Map<String, String> params = new HashMap<>();
-    /**
-     * 授权组
-     */
-    private List<AuthConfigVO> authGroup = new ArrayList<>();
-    /**
-     * 可选项，BaseContext的子类，如果需要修改默认的实现，如跳转方式需要配置此字段
-     */
-    private String contextClass;
-    /**
-     * 可选项，如果contextClass需要根据不同的配置有不同的行为则需要配置此字段
-     */
-    private Map<String, String> contextParams = new HashMap<>();
-
-
-    public String getActivityName() {
-        return activityName;
+    public ResultConfigVO getResult() {
+        return result;
     }
 
-    public void setActivityName(String activityName) {
-        this.activityName = activityName;
-    }
-
-    public Map<String, String> getParams() {
-        return params;
-    }
-
-    public void setParams(Map<String, String> params) {
-        this.params = params;
+    public void setResult(ResultConfigVO result) {
+        this.result = result;
     }
 
     public List<AuthConfigVO> getAuthGroup() {
@@ -61,20 +34,12 @@ public class BaseConfigVO implements Serializable {
         this.authGroup = authGroup;
     }
 
-    public String getContextClass() {
-        return contextClass;
+    public ContextConfigVO getContext() {
+        return context;
     }
 
-    public void setContextClass(String contextClass) {
-        this.contextClass = contextClass;
-    }
-
-    public Map<String, String> getContextParams() {
-        return contextParams;
-    }
-
-    public void setContextParams(Map<String, String> contextParams) {
-        this.contextParams = contextParams;
+    public void setContext(ContextConfigVO context) {
+        this.context = context;
     }
 
     /**

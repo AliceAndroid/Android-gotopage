@@ -1,5 +1,6 @@
 package com.library.gotopage.base;
 
+import com.library.gotopage.data.ConditionEnum;
 import com.library.gotopage.data.StateInterface;
 
 /**
@@ -30,7 +31,7 @@ public class BasePreAuthCondition implements StateInterface {
 
     public void start() {
         isStart = true;
-        getState(this);
+        checkoutState(this);
     }
 
     /**
@@ -41,16 +42,16 @@ public class BasePreAuthCondition implements StateInterface {
 
     public void after() {
         isStart = false;
-        getState(this);
+        checkoutState(this);
     }
 
     /**
-     * 一个前置条件的验证结果一般有下面几种情况
+     * 一个前置条件的验证
      * 0 通过
      * 1 失败
      * 2 pending
      */
-    public void getState(StateInterface stateInterface) {
+    public void checkoutState(StateInterface stateInterface) {
 
     }
 
@@ -71,7 +72,6 @@ public class BasePreAuthCondition implements StateInterface {
     }
 
     public void pendingAfter() {
-
     }
 
     public void failAfter() {
@@ -80,32 +80,31 @@ public class BasePreAuthCondition implements StateInterface {
 
     @Override
     public void stateCallBack(int state) {
-        baseContext.setStateSign(state);
         switch (state) {
             case BaseContext.STATE_SUCCESS:
                 if (isStart) {
-                    baseContext.setSuccessBeforeIndex();
+                    baseContext.setStateSign(ConditionEnum.SUCCESS_BEFORE);
                     successBefore();
                 } else {
-                    baseContext.setSuccessAfterIndex();
+                    baseContext.setStateSign(ConditionEnum.SUCCESS_AFTER);
                     successAfter();
                 }
                 break;
             case BaseContext.STATE_FAIL:
                 if (isStart) {
-                    baseContext.setFailBeforeIndex();
+                    baseContext.setStateSign(ConditionEnum.FAIL_BEFORE);
                     failBefore();
                 } else {
-                    baseContext.setFailAfterIndex();
+                    baseContext.setStateSign(ConditionEnum.FAIL_AFTER);
                     failAfter();
                 }
                 break;
             case BaseContext.STATE_PENDING:
                 if (isStart) {
-                    baseContext.setPendingBeforeIndex();
+                    baseContext.setStateSign(ConditionEnum.PENDING_BEFORE);
                     pendingBefore();
                 } else {
-                    baseContext.setPendingAfterIndex();
+                    baseContext.setStateSign(ConditionEnum.PENDING_AFTER);
                     pendingAfter();
                 }
                 break;

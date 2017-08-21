@@ -85,7 +85,7 @@ public class NavigationManager {
         this.fromContext = fromContext;
         JSONObject jsonObject = JSON.parseObject(params);
         BaseConfigVO config = RouterManager.getInstance().getNavigationItemByPageID(pageID, jsonObject);
-        if (null == config || TextUtils.isEmpty(config.getActivityName())) {
+        if (null == config || TextUtils.isEmpty(config.getResult().getActivity())) {
             return;
         }
         navigateForAPP(fromContext, config, flags);
@@ -102,7 +102,7 @@ public class NavigationManager {
      */
     public void navigateForAPP(Activity fromActivity, BaseConfigVO config, int flags) {
         // 根据config获取target
-        if (!TextUtils.isEmpty(config.getContextClass())) {
+        if (!TextUtils.isEmpty(config.getContext().getClazz())) {
             baseContext = getBaseContext(fromActivity, config, flags);
         } else {
             baseContext = new BaseContext(fromActivity, config, flags);
@@ -120,7 +120,7 @@ public class NavigationManager {
      */
     private BaseContext getBaseContext(Activity fromActivity, BaseConfigVO config, int flags) {
         try {
-            Class<BaseContext> clazz = (Class<BaseContext>) Class.forName(config.getContextClass());
+            Class<BaseContext> clazz = (Class<BaseContext>) Class.forName(config.getContext().getClazz());
             baseContext = clazz.getConstructor(Activity.class, BaseConfigVO.class, int.class).newInstance(fromActivity, config, flags);
         } catch (Exception e) {
             baseContext = new BaseContext(fromActivity, config, flags);
