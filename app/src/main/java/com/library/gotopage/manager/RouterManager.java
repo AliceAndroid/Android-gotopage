@@ -7,10 +7,9 @@ import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.library.gotopage.base.AuthConfigVO;
 import com.library.gotopage.base.BaseConfigVO;
-import com.library.gotopage.base.ContextConfigVO;
-import com.library.gotopage.base.ResultConfigVO;
 import com.library.gotopage.util.Util;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -65,10 +64,8 @@ public class RouterManager {
             itemVO = getNavigationItemByClassName(pageID);
         }
         if (null != itemVO && null != params) {
-            ResultConfigVO resultConfigVO = itemVO.getResult();
-            Map<String, String> map = resultConfigVO.getParams();
-            resultConfigVO.setParams(Util.getMap(map, params));
-            itemVO.setResult(resultConfigVO);
+            Map<String, String> map = itemVO.getParams();
+            itemVO.setParams(Util.getMap(map, params));
         }
         return itemVO;
     }
@@ -117,10 +114,7 @@ public class RouterManager {
         }
         if (null != activityClass) {
             itemVO = new BaseConfigVO();
-            ResultConfigVO configVO = itemVO.getResult();
-            configVO.setActivity(className);
-
-            itemVO.setResult(configVO);
+            itemVO.setActivity(className);
         }
         return itemVO;
     }
@@ -135,24 +129,18 @@ public class RouterManager {
     private BaseConfigVO getBaseConfigVOFromConditions(JSONArray conditions, JSONObject params) {
         BaseConfigVO itemVO = null;
         for (int i = 0; i < conditions.size(); i++) {
-            boolean exist = true;
             JSONObject condition = conditions.getJSONObject(i);
-            for (String key : condition.keySet()) {
-                if (!key.equals("result")) {
-                    String param = params.getString(key);
-                    String conditionParam = condition.getString(key);
-                    if (param == null || conditionParam == null || !param.equals(conditionParam)) {
-                        exist = false;
-                        break;
-                    } else {
-                        params.remove(key);
-                    }
+            if (condition.containsKey("type")) {
+                String param = params.getString("type");
+                String conditionParam = condition.getString("type");
+                if (null != param && null != conditionParam && param.equals(conditionParam)) {
+                    itemVO = getBaseConfigVOByJson(condition);
+                    break;
                 }
-            }
-            if (exist) {
+            } else {
                 itemVO = getBaseConfigVOByJson(condition);
-                break;
             }
+
         }
         return itemVO;
     }
@@ -168,21 +156,18 @@ public class RouterManager {
 
         JSONObject result = jsonObject.getJSONObject("result");
         if (null != result) {
-            ResultConfigVO resultConfigVO = itemVO.getResult();
-            resultConfigVO.setActivity(result.getString("activity"));
+            itemVO.setActivity(result.getString("activity"));
             JSONObject params = result.getJSONObject("params");
-            Map<String, String> map = resultConfigVO.getParams();
+            Map<String, String> map = itemVO.getParams();
             if (null != params) {
                 map = Util.getMap(map, params);
+                itemVO.setParams(map);
             }
-            resultConfigVO.setParams(map);
-
-            itemVO.setResult(resultConfigVO);
         }
 
         JSONArray authGroup = jsonObject.getJSONArray("authGroup");
         if (null != authGroup) {
-            List<AuthConfigVO> list = itemVO.getAuthGroup();
+            List<AuthConfigVO> list = new ArrayList<>();
             for (int i = 0; i < authGroup.size(); i++) {
                 JSONObject object = authGroup.getJSONObject(i);
                 AuthConfigVO vo = new AuthConfigVO();
@@ -190,14 +175,14 @@ public class RouterManager {
                 Map<String, String> params = vo.getParams();
                 if (null != object.getJSONObject("params")) {
                     params = Util.getMap(params, object.getJSONObject("params"));
+                    vo.setParams(params);
                 }
-                vo.setParams(params);
+
                 Map<String, String> options = vo.getOptions();
                 if (null != object.getJSONObject("options")) {
                     options = Util.getMap(options, object.getJSONObject("options"));
+                    vo.setOptions(options);
                 }
-                vo.setOptions(options);
-
                 list.add(vo);
             }
 
@@ -206,16 +191,13 @@ public class RouterManager {
 
         JSONObject context = jsonObject.getJSONObject("context");
         if (null != context) {
-            ContextConfigVO contextConfigVO = itemVO.getContext();
-            contextConfigVO.setClazz(context.getString("clazz"));
+            itemVO.setClazz(context.getString("clazz"));
             JSONObject contextParams = context.getJSONObject("options");
             if (null != contextParams) {
-                Map<String, String> conMap = contextConfigVO.getOptions();
+                Map<String, String> conMap = itemVO.getOptions();
                 conMap = Util.getMap(conMap, contextParams);
-                contextConfigVO.setOptions(conMap);
+                itemVO.setOptions(conMap);
             }
-
-            itemVO.setContext(contextConfigVO);
         }
 
         return itemVO;

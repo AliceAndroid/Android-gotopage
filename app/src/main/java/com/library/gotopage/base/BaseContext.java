@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.util.Log;
 
 import com.library.gotopage.data.ConditionEnum;
+import com.library.gotopage.manager.NavigationManager;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -32,12 +33,12 @@ public class BaseContext {
     /**
      * 权限状态记录
      */
-    protected Map<Integer, ConditionEnum> stateMap = new HashMap<>();
+    private Map<Integer, ConditionEnum> stateMap = new HashMap<>();
 
-    protected Activity context;
-    protected BaseConfigVO baseConfigVO;
-    protected Map<String, String> params;//跳转需要的参数
-    protected int flags;
+    private Activity context;
+    private BaseConfigVO baseConfigVO;
+    private Map<String, String> params;//跳转需要的参数
+    private int flags;
 
 
     public int getCurrentConditionIndex() {
@@ -61,7 +62,7 @@ public class BaseContext {
     }
 
     public Map<String, String> getParams() {
-        return baseConfigVO.getResult().getParams();
+        return baseConfigVO.getParams();
     }
 
     public void setParams(Map<String, String> params) {
@@ -311,6 +312,7 @@ public class BaseContext {
             intent.setFlags(flags);
         }
         context.startActivity(intent);
+        NavigationManager.getInstance().release();//是否资源
     }
 
     /**
@@ -336,7 +338,7 @@ public class BaseContext {
     protected Class getClazz(){
         Class activityClass = null;
         try {
-            activityClass = Class.forName(baseConfigVO.getResult().getActivity());
+            activityClass = Class.forName(baseConfigVO.getActivity());
             return activityClass;
         } catch (ClassNotFoundException e) {
             Log.e("NavigationManager", "获取activity失败");

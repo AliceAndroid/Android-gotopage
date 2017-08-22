@@ -85,7 +85,7 @@ public class NavigationManager {
         this.fromContext = fromContext;
         JSONObject jsonObject = JSON.parseObject(params);
         BaseConfigVO config = RouterManager.getInstance().getNavigationItemByPageID(pageID, jsonObject);
-        if (null == config || TextUtils.isEmpty(config.getResult().getActivity())) {
+        if (null == config || TextUtils.isEmpty(config.getActivity())) {
             return;
         }
         navigateForAPP(fromContext, config, flags);
@@ -102,7 +102,7 @@ public class NavigationManager {
      */
     public void navigateForAPP(Activity fromActivity, BaseConfigVO config, int flags) {
         // 根据config获取target
-        if (!TextUtils.isEmpty(config.getContext().getClazz())) {
+        if (!TextUtils.isEmpty(config.getClazz())) {
             baseContext = getBaseContext(fromActivity, config, flags);
         } else {
             baseContext = new BaseContext(fromActivity, config, flags);
@@ -120,7 +120,7 @@ public class NavigationManager {
      */
     private BaseContext getBaseContext(Activity fromActivity, BaseConfigVO config, int flags) {
         try {
-            Class<BaseContext> clazz = (Class<BaseContext>) Class.forName(config.getContext().getClazz());
+            Class<BaseContext> clazz = (Class<BaseContext>) Class.forName(config.getClazz());
             baseContext = clazz.getConstructor(Activity.class, BaseConfigVO.class, int.class).newInstance(fromActivity, config, flags);
         } catch (Exception e) {
             baseContext = new BaseContext(fromActivity, config, flags);
@@ -132,6 +132,9 @@ public class NavigationManager {
      * 条件验证，页面跳转
      */
     private void navigateTo() {
+        if (null == baseContext) {
+            return;
+        }
         BasePreAuthCondition currentCondition = baseContext.getCurrentCondition();
         if (currentCondition != null) {
             // 如果有上一个用户刚完成操作的前置条件，则需要执行前置条件的after回调
@@ -142,7 +145,6 @@ public class NavigationManager {
         } else {
             // 以上都不符合，直接跳转目标页面
             baseContext.gotoTarget();
-            baseContext = null;
         }
     }
 
@@ -150,6 +152,9 @@ public class NavigationManager {
      * 打断条件完成后调用
      */
     public void navigateForSkipResult() {
+        if (null == baseContext) {
+            return;
+        }
         navigateTo();
     }
 
@@ -165,4 +170,11 @@ public class NavigationManager {
         return activityName;
     }
 
+    /**
+     * 是否资源
+     */
+    public void release() {
+        fromContext = null;
+        baseContext = null;
+    }
 }

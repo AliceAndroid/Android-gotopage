@@ -2,6 +2,7 @@ package com.library.gotopage.base;
 
 import com.library.gotopage.data.ConditionEnum;
 import com.library.gotopage.data.StateInterface;
+import com.library.gotopage.manager.NavigationManager;
 
 /**
  * Author:jmtian
@@ -75,7 +76,7 @@ public class BasePreAuthCondition implements StateInterface {
     }
 
     public void failAfter() {
-
+        NavigationManager.getInstance().release();
     }
 
     @Override

@@ -14,16 +14,40 @@ import java.util.Map;
  */
 
 public class BaseConfigVO implements Serializable {
-    private ResultConfigVO result = new ResultConfigVO();//目标类
-    private List<AuthConfigVO> authGroup = new ArrayList<>();//权限组
-    private ContextConfigVO context = new ContextConfigVO();//baseContext 子类相关信息
+    /**
+     * activity Class
+     */
+    private String activity;
+    /**
+     * 将要传入activity的参数
+     */
+    private Map<String,String> params = new HashMap<>();
 
-    public ResultConfigVO getResult() {
-        return result;
+    private List<AuthConfigVO> authGroup = new ArrayList<>();//权限组
+    /**
+     * baseContext 子类
+     */
+    private String clazz;
+    /**
+     * baseContext 子类需要的配置项
+     */
+    private Map<String, String> options = new HashMap<>();
+
+
+    public String getActivity() {
+        return activity;
     }
 
-    public void setResult(ResultConfigVO result) {
-        this.result = result;
+    public void setActivity(String activity) {
+        this.activity = activity;
+    }
+
+    public Map<String, String> getParams() {
+        return params;
+    }
+
+    public void setParams(Map<String, String> params) {
+        this.params = params;
     }
 
     public List<AuthConfigVO> getAuthGroup() {
@@ -34,12 +58,20 @@ public class BaseConfigVO implements Serializable {
         this.authGroup = authGroup;
     }
 
-    public ContextConfigVO getContext() {
-        return context;
+    public String getClazz() {
+        return clazz;
     }
 
-    public void setContext(ContextConfigVO context) {
-        this.context = context;
+    public void setClazz(String clazz) {
+        this.clazz = clazz;
+    }
+
+    public Map<String, String> getOptions() {
+        return options;
+    }
+
+    public void setOptions(Map<String, String> options) {
+        this.options = options;
     }
 
     /**
